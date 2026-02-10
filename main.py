@@ -7,13 +7,13 @@ root.title("Advanced Text Editor")
 root.geometry("900x600")
 
 current_font_size = 18
-current_font_family = "Helvetica"
+default_font = "Helvetica"
 
 # ---------------- Text Area ----------------
 text = tk.Text(
     root,
     wrap=tk.WORD,
-    font=(current_font_family, current_font_size)
+    font=(default_font, current_font_size)
 )
 text.pack(expand=True, fill=tk.BOTH)
 
@@ -43,25 +43,45 @@ def save_file():
 
 # ---------------- Formatting Functions ----------------
 def change_text_color():
-    color = colorchooser.askcolor()[1]
-    if color:
-        text.tag_add("color", "sel.first", "sel.last")
-        text.tag_configure("color", foreground=color)
-
-def increase_font():
-    global current_font_size
-    current_font_size += 2
-    text.config(font=(current_font_family, current_font_size))
-
-def decrease_font():
-    global current_font_size
-    current_font_size -= 2
-    text.config(font=(current_font_family, current_font_size))
+    try:
+        color = colorchooser.askcolor()[1]
+        if color:
+            text.tag_add("color", "sel.first", "sel.last")
+            text.tag_configure("color", foreground=color)
+    except tk.TclError:
+        messagebox.showwarning("No Selection", "Please select text first")
 
 def make_bold():
-    text.tag_add("bold", "sel.first", "sel.last")
-    text.tag_configure("bold", font=(current_font_family, current_font_size, "bold"))
+    try:
+        text.tag_add("bold", "sel.first", "sel.last")
+        text.tag_configure(
+            "bold",
+            font=(default_font, current_font_size, "bold")
+        )
+    except tk.TclError:
+        messagebox.showwarning("No Selection", "Please select text first")
 
+# ---------------- Font Family Feature ----------------
+available_fonts = [
+    "Helvetica",
+    "Arial",
+    "Times New Roman",
+    "Courier New",
+    "Verdana",
+    "Georgia"
+]
+
+def change_font_family(font_name):
+    try:
+        text.tag_add(font_name, "sel.first", "sel.last")
+        text.tag_configure(
+            font_name,
+            font=(font_name, current_font_size)
+        )
+    except tk.TclError:
+        messagebox.showwarning("No Selection", "Please select text first")
+
+# ---------------- Dark Mode ----------------
 def dark_mode():
     root.config(bg="#1e1e1e")
     text.config(
@@ -86,16 +106,24 @@ file_menu.add_command(label="Exit", command=root.quit)
 # Format Menu
 format_menu = tk.Menu(menu, tearoff=0)
 menu.add_cascade(label="Format", menu=format_menu)
+
 format_menu.add_command(label="Text Color", command=change_text_color)
-format_menu.add_command(label="Increase Font Size", command=increase_font)
-format_menu.add_command(label="Decrease Font Size", command=decrease_font)
 format_menu.add_command(label="Bold", command=make_bold)
+
+# Font Family Submenu
+font_menu = tk.Menu(format_menu, tearoff=0)
+format_menu.add_cascade(label="Font Family", menu=font_menu)
+
+for font in available_fonts:
+    font_menu.add_command(
+        label=font,
+        command=lambda f=font: change_font_family(f)
+    )
 
 # View Menu
 view_menu = tk.Menu(menu, tearoff=0)
 menu.add_cascade(label="View", menu=view_menu)
 view_menu.add_command(label="Dark Mode", command=dark_mode)
 
-# ---------------- Run App ----------------
+# ---------------- Run Application ----------------
 root.mainloop()
-
